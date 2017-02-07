@@ -84,6 +84,7 @@ REVOKE ALL ON @extschema@.pg_settings FROM PUBLIC;
 
 /*
  * Return all sessions from pg_stat_activity with all columns visible
+ * Also includes extra columns to provide runtime intervals
  */
 CREATE FUNCTION pg_stat_activity() returns SETOF pg_catalog.pg_stat_activity 
 LANGUAGE PLPGSQL SECURITY DEFINER
@@ -119,6 +120,9 @@ IF @extschema@.check_version('9.6.0') THEN
                 , backend_xid
                 , backend_xmin
                 , query 
+                , now() - xact_start AS xact_runtime
+                , now() - query_start AS query_runtime
+                , now() - backend_start AS session_runtime
         FROM @extschema@.pg_stat_activity();
 
 ELSIF @extschema@.check_version('9.4.0') THEN
@@ -142,6 +146,9 @@ ELSIF @extschema@.check_version('9.4.0') THEN
                 , backend_xid
                 , backend_xmin
                 , query
+                , now() - xact_start AS xact_runtime
+                , now() - query_start AS query_runtime
+                , now() - backend_start AS session_runtime
         FROM @extschema@.pg_stat_activity();
 
 ELSE
@@ -163,6 +170,9 @@ ELSE
                 , waiting
                 , state
                 , query
+                , now() - xact_start AS xact_runtime
+                , now() - query_start AS query_runtime
+                , now() - backend_start AS session_runtime
         FROM @extschema@.pg_stat_activity();
 
 END IF;
